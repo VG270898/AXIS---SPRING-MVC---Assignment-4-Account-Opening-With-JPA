@@ -8,7 +8,10 @@ import com.accountOpening.service.AccountService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.ModelAndView;
 
 import java.util.HashMap;
@@ -52,40 +55,34 @@ public class ClientController {
         return new ModelAndView("AccountDetails",model);
     }
 
-    @GetMapping("searchClient")
-    public String clientSearch(){
+    @GetMapping("/searchClient")
+    public String clientSearch(ModelMap modelMap){
         return "SearchClient";
     }
 
-    @GetMapping("searchAccount")
+    @GetMapping("/searchAccount")
     public String accountSearch(){
         return "SearchAccount";
     }
 
-    public ModelAndView showClient(Long id){
-        Optional<Client> clients = clientRepo.findById(id);
-        HashMap<String, Optional<Client>> model = new HashMap<>();
-        model.put("list",clients);
-        return new ModelAndView("ClientDetails",model);
+
+    @PostMapping("/searchClient")
+    public String showClientById(@RequestParam Long clientId, ModelMap modelMap){
+        Optional<Client> clients = Optional.ofNullable(clientRepo.findById(clientId).orElse(null));
+        if(clients.isPresent()){
+            modelMap.addAttribute("list",clients.get());
+        }
+        return "SearchClient";
     }
 
-    @GetMapping("/{clientId}")
-    public void showClientById(@RequestParam("clientId") Long clientId, ModelMap modelMap){
-        modelMap.put("clientId",clientId);
-        System.out.println((Long) modelMap.get("clientId"));
-        showClient((Long) modelMap.get("clientId"));
-
-    }
-
-    @PostMapping("/accountId")
-    public String showAccountById(@RequestParam("accountNo") Long accountNo,ModelMap modelMap){
+    @PostMapping("/searchAccount")
+    public ModelAndView showAccountById(@RequestParam() Long accountNo, ModelMap modelMap){
         modelMap.put("accountNo",accountNo);
-        Optional<Account> accounts = accountRepo.findById((Long) modelMap.get("accountNo"));
-        System.out.println(accounts);
-        HashMap<String, Optional<Account>> model = new HashMap<>();
-        model.put("list",accounts);
-        new ModelAndView("AccountDetails",model);
-        return modelMap.get("accountNo").toString();
+        Optional<Account> accounts = Optional.ofNullable(accountRepo.findById(accountNo).orElse(null));
+        if(accounts.isPresent()){
+        modelMap.addAttribute("list",accounts.get());
+        }
+        return new ModelAndView("SearchAccount",modelMap);
     }
 
 
