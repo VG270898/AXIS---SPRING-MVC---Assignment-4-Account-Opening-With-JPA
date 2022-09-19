@@ -8,10 +8,8 @@ import com.accountOpening.service.AccountService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.ModelAndView;
 
 import java.util.HashMap;
@@ -29,6 +27,10 @@ public class ClientController {
     @Autowired
     private ClientRepo clientRepo;
 
+    @RequestMapping("")
+    public String login(){
+        return "Login";
+    }
 
 
     @RequestMapping("/Home")
@@ -65,14 +67,19 @@ public class ClientController {
         return "SearchAccount";
     }
 
+    @GetMapping("/register")
+    public String clientRegister(ModelMap modelMap){
+        return "registerClients";
+    }
+
 
     @PostMapping("/searchClient")
-    public String showClientById(@RequestParam Long clientId, ModelMap modelMap){
+    public ModelAndView showClientById(@RequestParam Long clientId, ModelMap modelMap){
         Optional<Client> clients = Optional.ofNullable(clientRepo.findById(clientId).orElse(null));
         if(clients.isPresent()){
-            modelMap.addAttribute("list",clients.get());
+        modelMap.addAttribute("list",clients.get());
         }
-        return "SearchClient";
+        return new ModelAndView("SearchClient",modelMap);
     }
 
     @PostMapping("/searchAccount")
@@ -86,16 +93,31 @@ public class ClientController {
     }
 
 
-//    @GetMapping("/account/{id}")
-//    public ResponseEntity<Account> showAccountById(@PathVariable Long id){
-//        return ResponseEntity.ok(accountRepo.findById(id).orElse(null));
-//    }
-//
-//
-//
-//
-//    @PutMapping("/client/update")
-//    public ResponseEntity<Client> updateClient(@RequestBody Client client) {
-//        return ResponseEntity.ok(clientRepo.save(client));
-//    }
+    @PostMapping("/register")
+    public ModelAndView registerClient(@ModelAttribute Client client, @RequestParam() String password, BindingResult bindingResult, ModelMap modelMap){
+        String message = accountService.openAccount(client,password);
+        System.out.println(message);
+        modelMap.addAttribute("message",message);
+        return new ModelAndView("registerClients",modelMap);
+    }
+
+    @PostMapping("")
+    public ModelAndView loginClient(@ModelAttribute Client client,@RequestParam() String password, BindingResult bindingResult, ModelMap modelMap){
+        String status = accountService.verify(client.getClientId(),password);
+
+        if(status.equals("verified")){
+            return new ModelAndView("Home",modelMap);
+        } else if (status.equals("wrongPass")) {
+            modelMap.addAttribute("message","Wrong Password!");
+            return new ModelAndView("Login",modelMap);
+        }else if (status.equals("noRecord")){
+            modelMap.addAttribute("message","Invalid User!");
+            return new ModelAndView("Login",modelMap);
+        }else {
+            modelMap.addAttribute("message",status);
+            return new ModelAndView("Login",modelMap);
+        }
+    }
+
+
 }

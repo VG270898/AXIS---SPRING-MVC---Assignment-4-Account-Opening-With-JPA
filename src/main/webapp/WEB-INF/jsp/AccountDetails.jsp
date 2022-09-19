@@ -18,7 +18,7 @@
    </style>
 </head>
 <body>
-    <a href="Home"><button class="btn btn-primary">Back</button></a>
+    <a href="Home"><button class="btn m-lg-3 btn-dark">Back</button></a>
     <h1 class="row justify-content-center align-items-center" style="margin-top: 3%;">Account Details</h1>
 
 
